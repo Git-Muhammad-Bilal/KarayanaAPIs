@@ -20,7 +20,7 @@ exports.CreateUser = async (req, res) => {
         }
     } catch (error) {
         console.log('createUser', error.message);
-        res.status(404).send(error)
+        res.status(404).send(error.message)
     }
 }
 

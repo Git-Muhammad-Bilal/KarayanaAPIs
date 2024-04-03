@@ -4,7 +4,7 @@ const { getSales, deleteSalesFromAproduct, createSales, getSalesNotification } =
 const { validateToken } = require('../controlers/auth');
 
 
-router.post('/createPurchase', createSales) 
+router.post('/createPurchase',  createSales) 
 router.get('/getPurchases/:productId',validateToken,  getSales) 
 router.delete('/deletePurchaseFromAproduct/:purchaseId',validateToken, deleteSalesFromAproduct) 
 router.get('/getSalesNotificaions',validateToken, getSalesNotification) 

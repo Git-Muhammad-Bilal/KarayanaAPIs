@@ -4,13 +4,11 @@ let Users = require('../modals/store');
 
 
 exports.createProduct = async (req, res) => {
-    console.log(req.body, 'body');
     const { _id } = req.user
     const { productName, quantity, cost, price } = req.body;
     let isProdExisting = await Products.findOne({ productName: productName, userId: _id })
-    
     try {
-        if (req.body._id ) {
+        if (req.body._id && !isProdExisting ) {
             await Products.findOneAndUpdate(
                 { _id: req.body._id },
                 { $set: { productName, quantity, cost, price, userId: req.body.userId } }
@@ -28,12 +26,12 @@ exports.createProduct = async (req, res) => {
 
 
         } else {
-            return res.status(401).send('Product Already Exisits')
+            return res.status(409).send('Product Already Exisits')
         }
 
     } catch (error) {
         console.log(error.message, 'mesaage');
-        res.status(400).send(error)
+        res.status(400).send(error.message)
     }
 
 }

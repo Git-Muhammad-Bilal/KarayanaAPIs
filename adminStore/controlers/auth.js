@@ -52,7 +52,6 @@ exports.getLoginUser = async (req, res) => {
     
    try {
         
-        console.log(curLogedInUser,comparePass,'curlogedinuser');
         if (curLogedInUser && comparePass) {
             let buyerOrStore = store?'store':'buyer'
             let accessToken =  createToken(req, curLogedInUser)
@@ -85,7 +84,8 @@ exports.getStoreName = async (req, res) => {
 
 exports.postLogoutUser = async (req, res) => {
     try {
-         await Users.findById(req.body.id);
+        console.log(req.body);
+        //  await Users.findById(req.body.id);
         res.status(200).send('succefyly loged out')
         
     } catch (error) {

@@ -25,7 +25,6 @@ exports.getStoreProfile = async (req, res) => {
 
 exports.removeProfile = async (req, res) => {
     let { fileName } = req.params;
-    console.log(fileName, 'name');
     fs.unlink('./profilesImagess/'+fileName, async (err) => {
         if (err) {
             throw err

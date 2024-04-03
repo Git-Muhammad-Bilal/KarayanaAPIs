@@ -4,29 +4,26 @@ const Purchases = require('../modals/sales');
 const purchases = require('../modals/sales');
 
 
-
-
 exports.getBuyers = async (req, res) => {
+    
     const { _id } = req.user
     try {
-        let allBuyers = await Buyers.find({ userId: _id }, { buyerName: 1, purchases: 1 })
+        let allBuyers = await Buyers.find({ storeId: _id })
         res.status(200).send(allBuyers)
-    } catch (error) {
-        res.status(404).send(error)
+        } catch (error) {
+        res.status(404).send(error.message)
     }
 }
 
 
 exports.getBuyersPurchases = async (req, res) => {
     let { buyerId } = req.params
-    console.log(buyerId);
     try {
-        let buyerDetail = await Buyers.find({ _id: buyerId }).populate(
+        let buyerDetail = await Buyers.find({ _id: buyerId}).populate(
              {
                 path: 'purchases.purchaseId',
             }
         )
-         
         res.send(buyerDetail)
 
     } catch (error) {
@@ -48,11 +45,12 @@ exports.deleteBuyer = async (req, res) => {
             { $pull: { purchases: { purchase: { $in: [...purcIds] } } } })
     
         await Purchases.deleteMany({ buyer: buyer._id })
-        let afterDeletedBuyers = await Buyers.find({ userId: _id })
-
+        let afterDeletedBuyers = await Buyers.find({storeId:_id})
         res.send(afterDeletedBuyers)
 
     } catch (error) {
-        console.log(error.message);;
+        console.log(error.message);
+        res.send(error.message)
     }
 }
+

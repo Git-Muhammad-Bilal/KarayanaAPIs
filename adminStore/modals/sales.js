@@ -51,32 +51,16 @@ const SalesSchema = new Schema({
 
 
 
-
-SalesSchema.pre('save', async function (next) {
-
-    let existingBuyer = await Buyers.findOne({ buyerName: this.buyerName }).exec()
-
-    if (existingBuyer) {
-        await Buyers.updateOne({ _id: existingBuyer.id }, { $push: { purchases: { purchaseId: this._id } } })
-        this.buyer = existingBuyer.id
-    } else {
-        let newbuyer = await new Buyers({ buyerName: this.buyerName, userId: this.store, purchases: { purchaseId: this._id } }).save();
-        this.buyer = newbuyer.id
-    }
-    let prod = await Products.findById(this.product)
-    await Products.updateOne({ _id: this.product }, { $push: { purchases: { purchase: this._id } } });
-    await Products.updateOne({ _id: this.product }, { $set: { quantity: prod.quantity - this.quantity } });
-    next()
-})
-
-
-
 SalesSchema.statics.removePurchasesFromAProduct = async function (doc) {
     let prod = await Products.findById(doc.product)
     await Products.updateOne({ _id: doc.product }, { $set: { quantity: prod?.quantity + doc?.quantity } });
-           
+
     await Products.updateOne({ purchases: { $elemMatch: { purchase: doc._id } } },
-            { $pull: { purchases: { purchase: doc._id } } })
+        { $pull: { purchases: { purchase: doc._id } } })
+      prod.notfiedPurchases.purchaseCount == 0 || await Products.updateOne({_id:doc.product},{$inc:{"notfiedPurchases.purchaseCount":-1},$set:{"notfiedPurchases.productId":doc.product}})
+ 
+    
+
 }
 
 
@@ -86,6 +70,27 @@ SalesSchema.statics.removePurchasesFromABuyer = async function (doc) {
         { $pull: { purchases: { purchaseId: doc._id } } })
 
 }
+
+// SalesSchema.pre('save', async function (next) {
+//     let existingBuyer = await Buyers.findOne({ buyerName: this.buyerName, userId: this.store })    
+    
+//     if (existingBuyer) {
+//        let byr = await Buyers.updateOne({ userId: this.store }, { $push: { purchases: { purchaseId: this._id } } })    
+//        this.buyer = byr.id
+
+//     } else {
+        
+//         let newbuyer = await Buyers.create({ buyerName: this.buyerName, userId: this.store, purchases: { purchaseId: this._id } })    
+//         this.buyer = newbuyer.id
+//     }
+//     let prod = await Products.findById(this.product)
+//     await Products.updateOne({ _id: this.product }, { $push: { purchases: { purchase: this._id } } });
+//     await Products.updateOne({ _id: this.product }, { $set: { quantity: prod.quantity - this.quantity } });
+//     next()
+// })
+
+
+
 
 
 

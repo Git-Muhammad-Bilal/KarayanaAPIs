@@ -1,65 +1,90 @@
 const date = require('moment');
 const Sales = require('../modals/sales');
+const Buyers = require('../modals/buyer')
 const productsModal = require('../modals/productsModal');
 const Purchases = require('../../buyer/modals/pourchases')
 
-exports.createSales = (socket, io) => {
+exports.createSales =  (socket, io) => {
     let user = socket.user
-    socket.on('order',  (data, callback) => {
+    socket.on('order', async  (data, callback) => {
          let bName = data[1] 
-        let sales = [];
-                 data[0]?.map( async ({_id,productName, quantity, cost, price, userId, storeName})=>{
-                    try {
-                    
-                   let sale = await new Sales({
-                            productName,
-                            buyerName:bName,
-                            quantity,
-                            cost,
-                            price,
-                            store:userId,
-                            product:_id,
-                            buyer: user._id
-                        }).save();
-                       let newPurchases =  await new Purchases({
-                            productName,
-                            buyerName:bName,
-                            quantity,
-                            cost,
-                            price, 
-                            user:user._id,
-                            store:userId, 
-                            storeName,
-                            purchaseDate:date().format('MMMM Do YYYY'),
-                            purchaseTime:date().format('h:mm:ss a'),
-                         }).save()
-                         await productsModal.updateMany({_id:_id},{$inc:{"notfiedPurchases.purchaseCount":1},$set:{"notfiedPurchases.productId":_id}})
+         let ifByrDsntExt = { buyerName:'', storeId: '', purchases:[]}
+         let sales = [];
+         let existingBuyer =await Buyers.findOne({ buyerName: bName, userId:user._id, storeId: data[0][0]?.userId })
+         data[0]?.map( async (sale, ind)=>{
+             const {_id, userId} = sale
+             try {
                          
-                        sales.push(sale)
-                        if ( sales.length === data[0].length ) {
-                          let productsNotificaoins= await productsModal.find({userId:userId}, {notfiedPurchases:1});
+                 let  newSale  = await createSales(sale,bName, user._id)
+                 sales.push(newSale)
+
+                           ifByrDsntExt = {buyerName: bName,userId:user._id, storeId:userId, purchases:[...ifByrDsntExt?.purchases ,{ purchaseId: newSale._id }]}
+                          
+                           if (existingBuyer) {
+                             await Buyers.updateOne( { buyerName: newSale.buyerName, storeId: newSale.store } , { $push: { purchases: { purchaseId: newSale._id } } })
+                      
+                          }else{
+                              if (sales.length === data[0].length) {
+                                 await Buyers.create(ifByrDsntExt)
+                               }
+                          }
+                         await updateProductsPurcahsesIds(newSale)    
+                         await createPurchase(sale, bName, user._id )
+                         await productsModal.updateMany({_id:_id},{$inc:{"notfiedPurchases.purchaseCount":1},$set:{"notfiedPurchases.productId":_id}})
+                          if (sales.length === data[0].length ) {
+                            let productsNotificaoins= await productsModal.find({userId:userId}, {notfiedPurchases:1});
                             io.emit('receive', productsNotificaoins )
                             io.emit('receiveNewSales', sales)
-                            
                         }
-                       
-                    } catch (error) {
+                      } catch (error) {
                         console.log(error.message);
                     }
                     
                 })
-                 callback( 'order has been placed', )
+               callback( 'order has been placed', )
               })
-            
-
-           
-            }
-
-    
+           }
 
 
+    async function createSales( sale ,bName, user_id){
+    const {_id,productName, quantity, cost, price, userId, storeName} = sale
+    let newSale = await new Sales({
+        productName,
+        buyerName:bName,
+        quantity,
+        cost,
+        price,
+        store:userId,
+        product:_id,
+        buyer: user_id
+    }).save()
+    return newSale
+    }
+     async function createPurchase(sale, bName, user_id){
+    const {_id,productName, quantity, cost, price, userId, storeName} = sale
+    let newPurchase =  await new Purchases({
+        productName,
+        buyerName:bName,
+        quantity,
+        cost,
+        price, 
+        user:user_id,
+        store:userId, 
+        storeName,
+        purchaseDate:date().format('MMMM Do YYYY'),
+        purchaseTime:date().format('h:mm:ss a'),
+    }).save()
+    return newPurchase
+        } 
+     async function updateProductsPurcahsesIds(sale){
+      let prod = await productsModal.findById(sale.product)
+    await productsModal.updateOne({ _id: sale.product }, { $push: { purchases: { purchase: sale._id } } });
+    await productsModal.updateOne({ _id: sale.product }, { $set: { quantity: prod.quantity - sale.quantity } });
+    }
 
-    exports.getSalesNotification = async (req, res)=>{
+
+ exports.getSalesNotification = async (req, res)=>{
+
         let storeId = req.user._id;
            try {
                let productsNotificaoins= await productsModal.find({userId:storeId}, {notfiedPurchases:1});
@@ -98,6 +123,7 @@ exports.deleteSalesFromAproduct = async (req, res) => {
         res.status(202).send(deletedPurchases);
         
     } catch (error) {
+        console.log(error.message,'message');
         let code = purchaseId? 406:null
         res.status(code || 404).send(error.message)
         

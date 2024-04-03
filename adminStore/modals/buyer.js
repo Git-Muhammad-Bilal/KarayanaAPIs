@@ -13,8 +13,11 @@ const BuyersSchema = new Schema({
     userId:{
         type:Schema.Types.ObjectId,
         ref:'Users',
-       
-    },
+       },
+    storeId:{
+        type:Schema.Types.ObjectId,
+        ref:'Stores',
+       },
     
     purchases: [{ purchaseId:{
                        type:Schema.Types.ObjectId,
