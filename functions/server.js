@@ -7,7 +7,9 @@ const app = express();
 let jwt = require('jsonwebtoken');
 const server = require('http').createServer(app)
 require('dotenv').config()
-app.use(cors("http://localhost:3000/"));
+app.use(cors({
+  origin: 'http://localhost:3000',
+}));
 app.options('*', cors())
 
 let bodyParser = require('body-parser');
