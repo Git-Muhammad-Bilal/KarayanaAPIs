@@ -7,13 +7,13 @@ const app = express();
 let jwt = require('jsonwebtoken');
 const server = require('http').createServer(app)
 require('dotenv').config()
+app.use(cors("http://localhost:3000/"));
+app.options('*', cors())
 
 let bodyParser = require('body-parser');
 app.use(express.static('profilesImagess'))
 app.use(bodyParser.json())
 
-app.use(cors("http://localhost:3000/"));
-app.options('*', cors())
 
 const io = require('socket.io')(server, {
   cors: "http://localhost:3000/"

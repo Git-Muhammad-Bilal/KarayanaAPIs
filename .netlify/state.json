@@ -1,0 +1,20 @@
+{
+	"siteId": "37aeff72-2018-4cb7-839b-a72a670130d8",
+	"geolocation": {
+		"data": {
+			"city": "Karachi",
+			"country": {
+				"code": "PK",
+				"name": "Pakistan"
+			},
+			"subdivision": {
+				"code": "SD",
+				"name": "Sindh"
+			},
+			"timezone": "Asia/Karachi",
+			"latitude": 24.8591,
+			"longitude": 66.9983
+		},
+		"timestamp": 1712182704465
+	}
+}
