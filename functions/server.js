@@ -14,12 +14,14 @@ app.use(cors({
 app.options('*', cors())
 
 let bodyParser = require('body-parser');
-app.use(express.static('profilesImagess'))
+app.use(express.static('./profilesImagess'))
 app.use(bodyParser.json())
 
 
 const io = require('socket.io')(server, {
-  cors: "http://localhost:3000/"
+  cors: {
+    origin: 'http://localhost:3000'
+  }
 })
 
 
@@ -43,6 +45,7 @@ io.on('connection', (socket) => {
 
 io.use(function (socket, next) {
   let token = socket.handshake.auth.jwt
+  console.log(token);
   if (token) {
     jwt.verify(token, process.env.ACCESS_SECRET_TOKEN, function (err, user) {
       if (err) return next(new Error('Authentication error'));
