@@ -1,7 +1,7 @@
 let Users = require('../modals/store')
 let BuyerUser = require('../../buyer/modals/Buyer')
 let jwt = require('jsonwebtoken');
-let bcrypt = require('bcrypt')
+let bcrypt = require('bcryptjs')
 
 const {getHashedPassword } = require('../../Hashing/hasingPassowrd');
 
