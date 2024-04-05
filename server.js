@@ -9,9 +9,11 @@ require('dotenv').config()
 let bodyParser = require('body-parser');
 app.use(express.static('profilesImagess'))
 app.use(bodyParser.json())
-app.use(cors("http://localhost:3000/"));
+app.use(cors("http://localhost:3000"));
 const io = require('socket.io')(server, {
-  cors: "http://localhost:3000/"
+   cors: {
+    origin: "http://localhost:3000", 
+  }
 })
 
 

@@ -1,0 +1,20 @@
+{
+	"siteId": "1c2e2534-682b-4089-98ae-25d50b1560db",
+	"geolocation": {
+		"data": {
+			"city": "Pakistan",
+			"country": {
+				"code": "PK",
+				"name": "Pakistan"
+			},
+			"subdivision": {
+				"code": "PB",
+				"name": "Punjab"
+			},
+			"timezone": "Asia/Karachi",
+			"latitude": 28.4901,
+			"longitude": 70.5319
+		},
+		"timestamp": 1712271231559
+	}
+}
