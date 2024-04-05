@@ -8,7 +8,7 @@ let jwt = require('jsonwebtoken');
 const server = require('http').createServer(app)
 require('dotenv').config()
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: '*',
 }));
 
 app.options('*', cors())
@@ -17,15 +17,11 @@ let bodyParser = require('body-parser');
 app.use(express.static('./profilesImagess'))
 app.use(bodyParser.json())
 
-
 const io = require('socket.io')(server, {
   cors: {
-    origin: 'http://localhost:3000'
+    origin: "*"
   }
 })
-
-
-
 
 const userRoutes = require('../adminStore/routes/userRoutes')
 const productRoutes = require('../adminStore/routes/productRoutes')
@@ -38,40 +34,56 @@ const fetchStoresRoutes = require('../buyer/routes/fetchStoresRoutes');
 const createUserRoutes = require('../buyer/routes/createUserRoutes');
 const getPurchasesRoutes = require('../buyer/routes/getPurchasesRoutes');
 
-io.on('connection', (socket) => {
-  createSales(socket, io)
-})
-
-
-io.use(function (socket, next) {
-  let token = socket.handshake.auth.jwt
-  console.log(token);
-  if (token) {
-    jwt.verify(token, process.env.ACCESS_SECRET_TOKEN, function (err, user) {
-      if (err) return next(new Error('Authentication error'));
-      socket.user = user;
-      next();
-    });
-  }
-  else {
-    next(new Error('Authentication error'));
-  }
-})
 
 
 // Stores routes
 
-app.use('/server',userRoutes)
-app.use('/server',productRoutes)
-app.use('/server',salesRoutes)
-app.use('/server',buyerRoutes)
-app.use('/server',uploadProfile)
+app.use('/.netlify/functions/server', userRoutes)
+app.use('/.netlify/functions/server', productRoutes)
+app.use('/.netlify/functions/server', salesRoutes)
+app.use('/.netlify/functions/server', buyerRoutes)
+app.use('/.netlify/functions/server', uploadProfile)
 
 // Buyer Routes
 
-app.use('/server',fetchStoresRoutes)
-app.use('/server',createUserRoutes)
-app.use('/server',getPurchasesRoutes)
+app.use('/.netlify/functions/server', fetchStoresRoutes)
+app.use('/.netlify/functions/server', createUserRoutes)
+app.use('/.netlify/functions/server', getPurchasesRoutes)
+
+app.post('/message', (req, res) => {
+  const { message } = req.body;
+
+  // Emit the message to all connected clients
+  io.on('connection', (socket) => {
+  
+    console.log(socket, 'socket');
+    createSales(socket, io)
+  })
+  
+  
+  io.use(function (socket, next) {
+    let token = socket.handshake.auth.jwt
+    console.log(token);
+    if (token) {
+      jwt.verify(token, process.env.ACCESS_SECRET_TOKEN, function (err, user) {
+        if (err) return next(new Error('Authentication error'));
+        socket.user = user;
+        next();
+      });
+    }
+    else {
+      next(new Error('Authentication error'));
+    }
+  })
+
+  // Respond with a success message
+  res.json({ success: true, message: 'Message forwarded successfully' });
+});
+
+
+
+
+
 
 
 mongoose.connect(process.env.DATABASE_URI).then((result) => {
