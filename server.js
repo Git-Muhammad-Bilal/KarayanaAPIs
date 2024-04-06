@@ -64,10 +64,10 @@ app.use(fetchStoresRoutes)
 app.use(createUserRoutes)
 app.use(getPurchasesRoutes)
 
-
+let port =3003 || 8080
 mongoose.connect(process.env.DATABASE_URI).then((result) => {
   console.log('connected');
-  server.listen(3003, (err) => {
+  server.listen(port, (err) => {
     console.log('listning on port 3003');
   })
 
