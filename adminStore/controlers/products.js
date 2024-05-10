@@ -7,8 +7,9 @@ exports.createProduct = async (req, res) => {
     const { _id } = req.user
     const { productName, quantity, cost, price } = req.body;
     let isProdExisting = await Products.findOne({ productName: productName, userId: _id })
+
     try {
-        if (req.body._id && !isProdExisting ) {
+        if (req.body._id && (!isProdExisting || isProdExisting?._id?.toString() === req.body?._id) ) {
             await Products.findOneAndUpdate(
                 { _id: req.body._id },
                 { $set: { productName, quantity, cost, price, userId: req.body.userId } }
@@ -60,7 +61,7 @@ exports.deleteProduct = async (req, res) => {
     let isProd;
     try {
 
-        isProd = await Products.findOneAndRemove({ _id: id })
+        isProd = await Products?.findByIdAndDelete({ _id: id })
         await Purchases.deleteMany({ product: id })
         await Users.updateOne({ _id: _id }, { $pull: { products: { productId: id } } });
         let prodsAfterDelete = await Products.find({ userId: _id })

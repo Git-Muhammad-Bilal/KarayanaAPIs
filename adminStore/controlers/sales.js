@@ -6,37 +6,25 @@ const Purchases = require('../../buyer/modals/pourchases')
 
 exports.createSales =  (socket, io) => {
     let user = socket.user
-    let count = 0;
     socket.on('order', async  (data, callback) => {
          let bName = data[1] 
-         let ifByrDsntExt = { buyerName:'', storeId: '', purchases:[]}
          let sales = [];
          let alreadyDone = false;
-         let existingBuyer =await Buyers.findOne({ buyerName: bName, userId:user._id, storeId: data[0][0]?.userId })
-         data[0]?.map( async (sale, ind)=>{
-            count+=1
-            
+           data[0]?.map( async (sale, ind)=>{
             const {_id, userId} = sale
-            try {
-                
-                let  newSale  = await createSales(sale,bName, user._id)
-                sales.push(newSale)
-                
-                ifByrDsntExt = {buyerName: bName,userId:user._id, storeId:userId, purchases:[...ifByrDsntExt?.purchases ,{ purchaseId: newSale._id }]}
-                
-                if (existingBuyer) {
-                             await Buyers.updateOne( { buyerName: newSale.buyerName, storeId: newSale.store } , { $push: { purchases: { purchaseId: newSale._id } } })
-                      
-                          }else{
-                              if (sales.length === data[0].length) {
-                                 await Buyers.create(ifByrDsntExt)
-                               }
-                            }
-                            await updateProductsPurcahsesIds(newSale)    
-                            await createPurchase(sale, bName, user._id )
-                            await productsModal.updateMany({_id:_id},{$inc:{"notfiedPurchases.purchaseCount":1},$set:{"notfiedPurchases.productId":_id}})
-                            if (sales.length === data[0].length && !alreadyDone) {
-                             alreadyDone = true;
+              try {
+                 let  newSale  = await createSales(sale,bName, user._id)
+                 sales.push(newSale)
+                             await Buyers.findOneAndUpdate( 
+                             { buyerName: newSale.buyerName, storeId: newSale.store } , 
+                             { $push: { purchases: { purchaseId: newSale._id } } },
+                             { new: true, upsert: true }
+                           )
+                         await updateProductsPurcahsesIds(newSale)    
+                         await createPurchase(sale, bName, user._id )
+                         await productsModal.updateMany({_id:_id},{$inc:{"notfiedPurchases.purchaseCount":1},$set:{"notfiedPurchases.productId":_id}})
+                          if (sales.length === data[0].length && !alreadyDone ) {
+                              alreadyDone = true;
                             let productsNotificaoins= await productsModal.find({userId:userId}, {notfiedPurchases:1});
                             io.emit('receive', productsNotificaoins )
                             io.emit('receiveNewSales', sales)
@@ -89,12 +77,11 @@ exports.createSales =  (socket, io) => {
 
 
  exports.getSalesNotification = async (req, res)=>{
-
+       
         let storeId = req.user._id;
-        console.log(storeId);
            try {
                let productsNotificaoins= await productsModal.find({userId:storeId}, {notfiedPurchases:1});
-               res.status(200).send(productsNotificaoins)
+             res.status(200).send(productsNotificaoins)
              
            } catch (error) {
             res.status(204).send(error)
@@ -120,7 +107,9 @@ exports.createSales =  (socket, io) => {
 
 exports.deleteSalesFromAproduct = async (req, res) => {
     let { purchaseId } = req.params
+  
     try {
+      
         let purchase = await Sales.findOneAndDelete({ _id: purchaseId })
         await Sales.removePurchasesFromABuyer(purchase)
         await Sales.removePurchasesFromAProduct(purchase)
@@ -129,11 +118,13 @@ exports.deleteSalesFromAproduct = async (req, res) => {
         res.status(202).send(deletedPurchases);
         
     } catch (error) {
+        console.log(error.message,'message');
         let code = purchaseId? 406:null
         res.status(code || 404).send(error.message)
         
     }
 }
+
 
 // exports.createSales = async (req, res) => {
    

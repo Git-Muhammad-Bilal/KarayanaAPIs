@@ -11,6 +11,6 @@ exports.getStores = async (req, res) => {
             res.status(204)
         }
     } catch (error) {
-        res.staus(204).send(error.message)
+        res.status(204).send(error.message)
     }
 }
